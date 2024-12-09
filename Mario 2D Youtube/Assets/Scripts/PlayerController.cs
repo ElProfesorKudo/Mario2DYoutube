@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Player Components")]
     [SerializeField] private SpriteRenderer _spriteRendererPlayer;
+    [SerializeField] private AnimationPlayerController _animationPlayerController;
 
     [Header("Input action references")]
     [SerializeField] private InputActionReference _playerInputActionReferenceMove;
@@ -75,13 +76,13 @@ public class PlayerController : MonoBehaviour
             _velocity.y = Mathf.Max(_velocity.y, 0f);
             _isPlayerJumping = false;
             // TODO: Resize of the collider
-            // Todo : HAndle animation
+            _animationPlayerController.SetBoolIsGroundedParameter(true);
         }
         else
         {
             _isPlayerJumping = true;
             // TODO: Resize of the collider
-            // Todo : HAndle animation
+            _animationPlayerController.SetBoolIsGroundedParameter(false);
         }
 
         // Todo: Handle the collision of the brick head
@@ -89,11 +90,22 @@ public class PlayerController : MonoBehaviour
         if (_isPlayerFacingAnything)
         {
             _velocity.x = 0f;
-            // TODO: Handle the anumation
+            _animationPlayerController.SetBoolIsRunningParameter(false);
+            _animationPlayerController.SetFloatAnimationSpeedMultiplierParameter(1);
+            _animationPlayerController.SetBoolIsSlidingParameter(false);
         }
         else
         {
             _velocity.x = _getInputValue.x * _speedPlayer;
+        }
+
+        if (_isPlayerGrounded && !_isPlayerFacingAnything && _getInputValue != Vector2.zero)
+        {
+            _animationPlayerController.SetBoolIsRunningParameter(true);
+            if (_isPlayerRunningFast)
+            {
+                _animationPlayerController.SetFloatAnimationSpeedMultiplierParameter(2);
+            }
         }
 
         //Todo: Check pipe interaction
@@ -126,7 +138,7 @@ public class PlayerController : MonoBehaviour
         {
             Vector2 tempMoveDirection = callbackContext.ReadValue<Vector2>();
             CheckDirectionToFace(tempMoveDirection);
-            //TODO: animate the charcter controller
+            _animationPlayerController.SetBoolIsRunningParameter(true);
         }
 
 
@@ -134,11 +146,12 @@ public class PlayerController : MonoBehaviour
         if (callbackContext.performed)
         {
             _previousInputValue = _getInputValue;
-            //Todo: Animation
+            _animationPlayerController.SetBoolIsRunningParameter(true);
         }
 
         if (callbackContext.canceled)
         {
+            _animationPlayerController.SetBoolIsRunningParameter(false);
             //TODO: Handle this anition of mario
             //Todo : Handle slide of mario when realse the key
         }
@@ -175,4 +188,13 @@ public class PlayerController : MonoBehaviour
     {
         _gravitySpeedFall = 3.0f;
     }
+}
+
+public enum PlayerState
+{
+    Small = 0,
+    Grown = 1,
+    PowerUp = 2,
+    SuperPower = 3,
+    Dead = 4
 }

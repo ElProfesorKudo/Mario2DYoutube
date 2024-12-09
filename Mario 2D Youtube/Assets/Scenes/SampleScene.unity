@@ -133,6 +133,8 @@ GameObject:
   - component: {fileID: 140588767}
   - component: {fileID: 140588765}
   - component: {fileID: 140588764}
+  - component: {fileID: 140588769}
+  - component: {fileID: 140588768}
   m_Layer: 0
   m_Name: Mario2DPlayer
   m_TagString: Untagged
@@ -225,6 +227,7 @@ MonoBehaviour:
   _rigidbody2DPlayer: {fileID: 140588766}
   _boxCollider2DPlayer: {fileID: 140588767}
   _spriteRendererPlayer: {fileID: 140588763}
+  _animationPlayerController: {fileID: 140588769}
   _playerInputActionReferenceMove: {fileID: -6348867403948215800, guid: 2108d71f7d88e4d8da296990f3f1979d, type: 3}
   _playerInputActionReferenceJump: {fileID: -1402918411742654140, guid: 2108d71f7d88e4d8da296990f3f1979d, type: 3}
   _groundPipeBrickLayerMask:
@@ -443,6 +446,43 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.8, y: 1}
   m_EdgeRadius: 0.01
+--- !u!95 &140588768
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140588761}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 4e8cb2c7fc3d849808dd92e273bac0ca, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &140588769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140588761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3e26c0a5d4d48dfab2dc4bef8393ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animatorPlayer: {fileID: 140588768}
+  _runtimeAnimatorPlayerControllerAnimator: {fileID: 0}
+  _runtimeAnimatorPlayerControllerAnimatorOverride: {fileID: 0}
 --- !u!1 &408117764
 GameObject:
   m_ObjectHideFlags: 0
