@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,6 +22,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask _brickLayerMask;
     [SerializeField] private LayerMask _pipeLayerMask;
 
+    private IEnumerator _forceAddAtTheEnd;
+
 
     private float _speedPlayer = 5f;
     private float _gravitySpeedFall;
@@ -43,6 +46,15 @@ public class PlayerController : MonoBehaviour
     private float Gravity => ((-2.0f * _maxJumpHeight) / Mathf.Pow(_maxJumpTime / 2.0f, 2));
     private float JumpForce => (2.0f * _maxJumpHeight) / (_maxJumpTime / 2.0f);
 
+
+    private void OnEnable()
+    {
+        SubscribeEvent();
+    }
+    private void OnDisable()
+    {
+        UnsubscribeEvent();
+    }
     private void Update()
     {
         //TODO: handle the state of player and the game
@@ -140,21 +152,29 @@ public class PlayerController : MonoBehaviour
             CheckDirectionToFace(tempMoveDirection);
             _animationPlayerController.SetBoolIsRunningParameter(true);
         }
-
-
-        _getInputValue = callbackContext.ReadValue<Vector2>();
-        if (callbackContext.performed)
+        if (_forceAddAtTheEnd != null && _forceAddAtTheEnd.MoveNext())
         {
-            _previousInputValue = _getInputValue;
-            _animationPlayerController.SetBoolIsRunningParameter(true);
+            return;
+        }
+        else
+        {
+            _getInputValue = callbackContext.ReadValue<Vector2>();
+            if (callbackContext.performed)
+            {
+                _previousInputValue = _getInputValue;
+                _animationPlayerController.SetBoolIsRunningParameter(true);
+            }
+
+            if (callbackContext.canceled)
+            {
+                _animationPlayerController.SetBoolIsRunningParameter(false);
+                if (_isPlayerRunningFast && !_isPlayerFacingAnything && _isPlayerGrounded)
+                {
+                    RunSlidePlayer(_previousInputValue);
+                }
+            }
         }
 
-        if (callbackContext.canceled)
-        {
-            _animationPlayerController.SetBoolIsRunningParameter(false);
-            //TODO: Handle this anition of mario
-            //Todo : Handle slide of mario when realse the key
-        }
     }
 
     public void OnJump(InputAction.CallbackContext callbackContext)
@@ -184,9 +204,110 @@ public class PlayerController : MonoBehaviour
     }
     #endregion Input System
 
+    private void RunSlidePlayer(Vector2 direction)
+    {
+        _animationPlayerController.SetBoolIsSlidingParameter(true);
+        if (_forceAddAtTheEnd != null)
+        {
+            StopCoroutine(_forceAddAtTheEnd);
+            _forceAddAtTheEnd = null;
+        }
+        _forceAddAtTheEnd = Utils.ExecuteCallbackDuringAmountOfTimeWaned(() =>
+        {
+            _rigidbody2DPlayer.AddForce(direction * 10);
+        },
+        () =>
+        {
+            _animationPlayerController.SetBoolIsRunningParameter(false);
+            _animationPlayerController.SetBoolIsSlidingParameter(false);
+        }, 0.5f);
+
+        StartCoroutine(_forceAddAtTheEnd);
+
+
+    }
+
+    #region Subscribe and Unsubscribe
+
+    private void SubscribeEvent()
+    {
+        if (!_playerInputActionReferenceMove.action.interactions.Contains("Hold"))
+        {
+            Debug.LogWarning("Not found interaction Hold");
+            return;
+        }
+        else
+        {
+            _playerInputActionReferenceMove.action.performed += callbackEvent =>
+            {
+                UpdateSpeedPlayerWhenHoldKey();
+                UpdateSpeedAnimationRunWhenHoldKey();
+                UpdateIsPlayerRunningFast(true);
+            };
+            _playerInputActionReferenceMove.action.canceled += callbackEvent =>
+            {
+                ReduceSpeedPlayerWhenReleaseKey();
+                ReduceSpeedAnimationRunWhenReleaseKey();
+                UpdateIsPlayerRunningFast(false);
+            };
+        }
+
+        //TODO: Subscribe the event for the jump input
+    }
+
+    private void UnsubscribeEvent()
+    {
+        if (!_playerInputActionReferenceMove.action.interactions.Contains("Hold"))
+        {
+            Debug.LogWarning("Not found interaction Hold");
+            return;
+        }
+        else
+        {
+            _playerInputActionReferenceMove.action.performed -= callbackEvent =>
+            {
+                UpdateSpeedPlayerWhenHoldKey();
+                UpdateSpeedAnimationRunWhenHoldKey();
+                UpdateIsPlayerRunningFast(true);
+            };
+            _playerInputActionReferenceMove.action.canceled -= callbackEvent =>
+            {
+                ReduceSpeedPlayerWhenReleaseKey();
+                ReduceSpeedAnimationRunWhenReleaseKey();
+                UpdateIsPlayerRunningFast(false);
+            };
+        }
+
+        //TODO: Subscribe the event for the jump input
+    }
+    #endregion Subscribe and Unsubscribe
+
     private void UpdateSpeedFallValueAfterHoldOrCancelJump()
     {
         _gravitySpeedFall = 3.0f;
+    }
+    private void UpdateSpeedPlayerWhenHoldKey()
+    {
+        _speedPlayer = 10.0f;
+    }
+    private void UpdateSpeedAnimationRunWhenHoldKey()
+    {
+        _animationPlayerController.SetFloatAnimationSpeedMultiplierParameter(2);
+    }
+
+    private void ReduceSpeedPlayerWhenReleaseKey()
+    {
+        _speedPlayer = 5.0f;
+    }
+    private void ReduceSpeedAnimationRunWhenReleaseKey()
+    {
+        _animationPlayerController.SetFloatAnimationSpeedMultiplierParameter(1);
+    }
+
+
+    private void UpdateIsPlayerRunningFast(bool value)
+    {
+        _isPlayerRunningFast = value;
     }
 }
 
